@@ -105,7 +105,7 @@ async function validateNewAccountInfo(){
     }
     var createAccountResponse = await createAccount(); 
     if(createAccountResponse.statusCode = "200"){
-        window.location.href="/html/signupSuccess.html";
+        window.location.href="signupSuccess.html";
         return;
     }else{      //Account Creation - Error Handling 
         if(createAccountResponse.statusCode = "403"){
@@ -134,5 +134,5 @@ function createAccount(){
     })
 }
 function navigateToLogin(){
-    window.location.href = "/html/index.html";
+    window.location.href = "index.html";
 }
