@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Shopper Account Creation</title>
+        <link rel="stylesheet" href="/styles.css">
+        <script src="script/login.js"></script>
+    </head>
+    <div id="globalContainer">
+        <h1>Create an Account</h1>
+        <div id="requestErrorContainer" class="errorContainer">
+        </div>
+        <div id="componentContainer">
+            <form id="createAccountForm"> 
+                -Username-
+                <div id="usernameErrorContainer" class="errorContainer"></div>
+                <input id="usernameField" /><br />
+                -Password-
+                <div id="passwordErrorContainer" class="errorContainer"></div>
+                <input id="passwordField" /> <br />
+                -Retype Password-  
+                <div id="retypePasswordErrorContainer" class="errorContainer"></div>
+                <input id="retypePasswordField" /><br />
+                -First Name- 
+                <div id="firstNameErrorContainer" class="errorContainer"></div>
+                <input id="firstNameField" /><br />
+                -Last Name- 
+                <div id="lastNameErrorContainer" class="errorContainer"></div>
+                <input id="lastNameField" /><br />
+                -Email- 
+                <div id="emailErrorContainer" class="errorContainer"></div>
+                <input id="emailField" /><br />
+                -Phone (optional)-
+                <div id="optionalPhoneErrorContainer" class="errorContainer"></div>
+                <input id="optionalPhoneField" /><br />
+                -Birthday-
+                <div id="birthdayErrorContainer" class="errorContainer"></div>
+                <input id="birthdayField" /><br />
+                <button id="createAccountButton" type="button" onclick="validateNewAccountInfo()">Create Account</button>
+                <button id="backButton" type="button" onclick="navigateToLogin()">Back to Login</button>
+            </form>
+        </div>
+    </div>
+</html>
