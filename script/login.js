@@ -14,7 +14,7 @@ async function validateInput(user, pass){
        }
        localStorage.setItem("userInfo", JSON.stringify(userInfo));
        window.location.replace("./home.html");
-    
+
     }
 }
 function login(user, pass) {
@@ -43,14 +43,24 @@ async function validateNewAccountInfo(){
     let email = document.getElementById("emailField").value;
     let optionalPhone = document.getElementById("optionalPhoneField").value;
     let birthday = document.getElementById("birthdayField").value;
-
+    
     // Username Validation
     if(username.length < 8){
         document.getElementById("usernameErrorContainer").textContent = "Username needs to be at least 8 characters long.";
         return;
     }else {
+        let doesUserExist = await checkIfUsernameExists(username).then((response) => response.json()).then((data) => {return data});
         document.getElementById("usernameErrorContainer").textContent = "";
+        if(Object.keys(doesUserExist).length === 2){
+            document.getElementById("usernameErrorContainer").textContent = "Username is already taken. Please choose another";
+            return;
+        }
+        else{
+            document.getElementById("usernameErrorContainer").textContent = "";
+        }
     }
+    
+    console.log();
     //Password Validation - Validate password matches the retyped password
     if(password != retypePassword){
         document.getElementById("retypePasswordErrorContainer").textContent = "Passwords need to match.";
@@ -117,20 +127,36 @@ async function validateNewAccountInfo(){
 function createAccount(){
     const input = {
         "userName": document.getElementById("usernameField").value,
-        "password" : document.getElementById("").value,
-        "firstName" : document.getElementById("").value,
-        "lastName" : document.getElementById("").value,
-        "email" : document.getElementById("").value,
-        "optionalPhone" : document.getElementById("").value,
-        "birthday": dicoument.getElementById("birthdayField")
+        "password" : document.getElementById("passwordField").value,
+        "firstName" : document.getElementById("firstNameField").value,
+        "lastName" : document.getElementById("lastNameField").value,
+        "email" : document.getElementById("emailField").value,
+        "optionalPhone" : document.getElementById("optionalPhoneField").value,
+        "birthday": document.getElementById("birthdayField").value,
+        "creationDate": null
     }
     return fetch("http://localhost:8080/users/api/create-account", {  
         method: "POST",
+        mode: "cors",
         headers: {
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": "http://localhost:8080",
             "Content-type": "application/json; charset=UTF-8"
         },
         body: JSON.stringify(input),
+    })
+}
+function checkIfUsernameExists(username){
+    const data = {'userName': username,
+                  'password': 'NO'};
+    const url = 'http://localhost:8080/users/api/check-username'
+    return fetch(url, {
+       method: "POST",
+       mode: "cors",
+       headers: {
+        "Access-Control-Allow-Origin": "http://localhost:5500",
+        "Content-type": "application/json; charset=UTF-8"
+       },
+       body: JSON.stringify(data),
     })
 }
 function navigateToLogin(){
