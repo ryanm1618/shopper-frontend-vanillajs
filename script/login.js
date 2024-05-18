@@ -1,5 +1,17 @@
 async function validateInput(user, pass){
     let userInfo;
+    if(user.length < 8){
+        document.getElementById("usernameErrorContainer").textContent = "Invalid username";
+        return;
+    }else{
+        document.getElementById("usernameErrorContainer").textContent = "";
+    }
+    if(pass.length < 8){
+        document.getElementById("passwordErrorContainer").textContent = "Invalid password";
+        return;
+    }else{
+        document.getElementById("passwordErrorContainer").textContent = "";
+    }
     if(user != null && pass != null){
        userInfo = await login(user, pass).then(result => result.json()).then(data => {return data});
        console.log("Here goes nothing...")
@@ -59,8 +71,6 @@ async function validateNewAccountInfo(){
             document.getElementById("usernameErrorContainer").textContent = "";
         }
     }
-    
-    console.log();
     //Password Validation - Validate password matches the retyped password
     if(password != retypePassword){
         document.getElementById("retypePasswordErrorContainer").textContent = "Passwords need to match.";
@@ -112,6 +122,7 @@ async function validateNewAccountInfo(){
         document.getElementById("birthdayErrorContainer").textContent = "Please enter a valid birthday."; 
     }else {
         document.getElementById("birthdayErrorContainer").textContent = "";
+        birthday = convertBirthdayToSQLDate(birthday);
     }
     var createAccountResponse = await createAccount(); 
     if(createAccountResponse.statusCode = "200"){
@@ -124,6 +135,14 @@ async function validateNewAccountInfo(){
     }
     
 }
+function convertBirthdayToSQLDate(birthday){ 
+    var bday = '';
+    bday += birthday.substring(6) + '-';      //YYYY-
+    bday += birthday.substring(0, 2) + '-';   //YYYY-MM-
+    bday += birthday.substring(3, 5);         //YYYY-MM-DD
+
+    return bday;
+}
 function createAccount(){
     const input = {
         "userName": document.getElementById("usernameField").value,
@@ -132,7 +151,7 @@ function createAccount(){
         "lastName" : document.getElementById("lastNameField").value,
         "email" : document.getElementById("emailField").value,
         "optionalPhone" : document.getElementById("optionalPhoneField").value,
-        "birthday": document.getElementById("birthdayField").value,
+        "birthday": convertBirthdayToSQLDate(document.getElementById("birthdayField").value),
         "creationDate": null
     }
     return fetch("http://localhost:8080/users/api/create-account", {  
@@ -146,8 +165,9 @@ function createAccount(){
     })
 }
 function checkIfUsernameExists(username){
-    const data = {'userName': username,
-                  'password': 'NO'};
+    const data = {'userId': 0,
+                  'userName': username,
+                  'password': '00000000'};
     const url = 'http://localhost:8080/users/api/check-username'
     return fetch(url, {
        method: "POST",
