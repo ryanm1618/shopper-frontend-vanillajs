@@ -1,4 +1,4 @@
-async function validateInput(user, pass){
+async function validateLoginInput(user, pass){
     let userInfo;
     if(user.length < 8){
         document.getElementById("usernameErrorContainer").textContent = "Invalid username";
@@ -31,6 +31,7 @@ async function validateInput(user, pass){
 }
 function login(user, pass) {
     const input = {
+        'userId': 0,
         'userName': user,
         'password': pass
     };
@@ -47,21 +48,22 @@ function navigateToAccountCreation(){
     window.location.href="signup.html";
 }
 async function validateNewAccountInfo(){
-    let username = document.getElementById("usernameField").value;
-    let password = document.getElementById("passwordField").value;
-    let retypePassword = document.getElementById("retypePasswordField").value;
-    let firstName = document.getElementById("firstNameField").value;
-    let lastName = document.getElementById("lastNameField").value;
-    let email = document.getElementById("emailField").value;
-    let optionalPhone = document.getElementById("optionalPhoneField").value;
-    let birthday = document.getElementById("birthdayField").value;
-    
+    const fromForm = {
+        userName : document.getElementById("usernameField").value,
+        password : document.getElementById("passwordField").value,
+        retypePassword : document.getElementById("retypePasswordField").value,
+        firstName : document.getElementById("firstNameField").value,
+        lastName : document.getElementById("lastNameField").value,
+        email : document.getElementById("emailField").value,
+        optionalPhone : document.getElementById("optionalPhoneField").value,
+        birthday : document.getElementById("birthdayField").value
+    }
     // Username Validation
-    if(username.length < 8){
+    if(fromForm.userName.length < 8){
         document.getElementById("usernameErrorContainer").textContent = "Username needs to be at least 8 characters long.";
         return;
     }else {
-        let doesUserExist = await checkIfUsernameExists(username).then((response) => response.json()).then((data) => {return data});
+        let doesUserExist = await checkIfUsernameExists(fromForm.userName).then((response) => response.json()).then((data) => {return data});
         document.getElementById("usernameErrorContainer").textContent = "";
         if(Object.keys(doesUserExist).length === 2){
             document.getElementById("usernameErrorContainer").textContent = "Username is already taken. Please choose another";
@@ -72,28 +74,28 @@ async function validateNewAccountInfo(){
         }
     }
     //Password Validation - Validate password matches the retyped password
-    if(password != retypePassword){
+    if(fromForm.password != fromForm.retypePassword){
         document.getElementById("retypePasswordErrorContainer").textContent = "Passwords need to match.";
         return;
     }else {
         document.getElementById("retypePasswordErrorContainer").textContent = "";
     }
     //Password Validation - Validate password is of required length
-    if(password.length < 8){
+    if(fromForm.password.length < 8){
         document.getElementById("passwordErrorContainer").textContent = "Password needs to be at least 8 characters long.";
         return;
     }else {
         document.getElementById("passwordErrorContainer").textContent = "";
     }
     //First Name Validation - Validate First Name is at least 1 character
-    if(firstName.length < 1){
+    /*if(fromForm.firstName.length < 1){
         document.getElementById("firstNameErrorContainer").textContent = "First name is required.";
         return;
     }else {
         document.getElementById("firstNameErrorContainer").textContent = "";
-    }
+    }*/
     //Last Name validation - Validate that Last Name is at least 1 character
-    if(lastName.length < 1){
+    if(fromForm.lastName.length < 1){
         document.getElementById("lastNameErrorContainer").textContent = "Last name/initial required.";
         return;
     }else {
@@ -101,7 +103,7 @@ async function validateNewAccountInfo(){
     }
     //Email Validation - Validate (using regex) that a valid email is there 
     var emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/; 
-    if(!email.match(emailRegex)){
+    if(!fromForm.email.match(emailRegex)){
         document.getElementById("emailErrorContainer").textContent = "Please enter a valid email.";
         return;
     }else {
@@ -109,7 +111,7 @@ async function validateNewAccountInfo(){
     }
     //Phone Validaiton - Validate that no more than 14 characters are present
     //                  and are in the form 1-401-218-7528
-    if(optionalPhone.length > 14){
+    if(fromForm.optionalPhone.length > 14){
         document.getElementById("optionalPhoneErrorContainer").textContent = "No more than 14 characters allowed for phone number";
         return;
     }else {
@@ -118,19 +120,25 @@ async function validateNewAccountInfo(){
     //Birthday Validation - Validate that a proper date has been entered in the form of: 
     //                  MM-DD-YYYY
     var birthdayRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|1\d|2\d|3[01])\/(19|20)\d{2}$/
-    if(!birthday.match(birthdayRegex)){
+    if(!fromForm.birthday.match(birthdayRegex)){
         document.getElementById("birthdayErrorContainer").textContent = "Please enter a valid birthday."; 
+        return;
     }else {
         document.getElementById("birthdayErrorContainer").textContent = "";
-        birthday = convertBirthdayToSQLDate(birthday);
+        fromForm.birthday = convertBirthdayToSQLDate(fromForm.birthday);
     }
-    var createAccountResponse = await createAccount(); 
+
+    delete fromForm.retypePassword; //Need our object to match the DTO it'll be mapped to on the server
+    var createAccountResponse = await createAccount(fromForm).then((response) => response.json()).then((data) => {return data}); 
     if(createAccountResponse.statusCode = "200"){
         window.location.href="signupSuccess.html";
         return;
     }else{      //Account Creation - Error Handling 
         if(createAccountResponse.statusCode = "403"){
             document.getElementById("usernameErrorContainer").textContent = "Username already taken. Please choose another"; 
+        }
+        if(createAccountResponse.statusCode = "400"){
+            document.getElementById("usernameErrorContainer").textContent = "SOME ERROR OCCURRED";
         }
     }
     
@@ -143,17 +151,10 @@ function convertBirthdayToSQLDate(birthday){
 
     return bday;
 }
-function createAccount(){
-    const input = {
-        "userName": document.getElementById("usernameField").value,
-        "password" : document.getElementById("passwordField").value,
-        "firstName" : document.getElementById("firstNameField").value,
-        "lastName" : document.getElementById("lastNameField").value,
-        "email" : document.getElementById("emailField").value,
-        "optionalPhone" : document.getElementById("optionalPhoneField").value,
-        "birthday": convertBirthdayToSQLDate(document.getElementById("birthdayField").value),
-        "creationDate": null
-    }
+function getCurrentDateTime(){
+    return new Date().toISOString().slice(0, 19).replace('T', ' ');
+}
+function createAccount(input){
     return fetch("http://localhost:8080/users/api/create-account", {  
         method: "POST",
         mode: "cors",
